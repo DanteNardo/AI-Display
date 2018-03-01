@@ -1207,11 +1207,8 @@ AI-Display/Library/BuildPlayer.prefs
 AI-Display/Library/AssetImportState
 AI-Display/Library/AnnotationManager
 AI-Display/Assets/Textures/sand.jpg.meta
-AI-Display/Assets/Textures/sand.jpg
 AI-Display/Assets/Scripts/MapManager.cs.meta
-AI-Display/Assets/Scripts/MapManager.cs
 AI-Display/Assets/Scripts/Heap.cs.meta
-AI-Display/Assets/Scripts/Heap.cs
 AI-Display/AI-Display.CSharp.csproj
 AI-Display/AI-Display.CSharp.Plugins.csproj.user
 AI-Display/AI-Display.CSharp.Plugins.csproj
