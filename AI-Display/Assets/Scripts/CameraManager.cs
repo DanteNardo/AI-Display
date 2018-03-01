@@ -75,6 +75,9 @@ public class CameraManager : MonoBehaviour
 	/// </summary>
 	void DisplayGUIText()
 	{
+
+        /*
+
 		switch (currentCameraIndex)
 		{
 			case 0:
@@ -95,5 +98,9 @@ public class CameraManager : MonoBehaviour
 		}
 		text.text += "\nPRESS 'C' to switch cameras.";
 		text.text += "\nPRESS 'F' to activate and deactivate power analysis mode.";
-	}
+    
+        */
+    }
+
+
 }
