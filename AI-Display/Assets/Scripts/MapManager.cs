@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,10 +7,14 @@ using PathHeap;
 
 public class MapManager : MonoBehaviour {
 
+    public GameObject[] obstacles;
+
+    public GameObject testBlock;
+
+    public GameObject character;
+
     private int x = 100;
     private int y = 100;
-
-    private int size = 1;
 
     //true: location can be moved to, false: location can't be oved to
     public bool[,] mapData;
@@ -17,7 +22,11 @@ public class MapManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        mapData = new bool[x,y];
+
         GetMapData();
+
+        SetCharacter();
 	}
 	
 	// Update is called once per frame
@@ -27,7 +36,79 @@ public class MapManager : MonoBehaviour {
 
     private void GetMapData()
     {
-        //get data from the map
+        for(int i = 0; i < x; i++)
+        {
+            for(int j = 0; j < y; j++)
+            {
+                mapData[i, j] = true;
+            }
+        }
+
+        obstacles = GameObject.FindGameObjectsWithTag("Obstacle");
+
+        //Debug.Log(obstacles.Length);
+
+        int sizeX;
+        int sizeY;
+        int locX;
+        int locY;
+
+        for(int i = 0; i < obstacles.Length; i++)
+        {
+            sizeX = (int)obstacles[i].transform.localScale.x;
+
+            sizeY = (int)obstacles[i].transform.localScale.z;
+
+            locX = (int)obstacles[i].transform.position.x + x / 2 - sizeX / 2;
+
+            locY = (int)(obstacles[i].transform.position.z - y / 2) * -1 - sizeY / 2;
+
+            for(int tempX = locX; tempX < locX + sizeX; tempX++)
+            {
+                
+                for(int tempY = locY; tempY < locY + sizeY; tempY++)
+                {
+                    mapData[tempX, tempY] = false;
+                }
+            }
+        }
+
+        TestMapData();
+    }
+
+
+    private void SetCharacter()
+    {
+        int randX = 0;
+        int randY = 0;
+
+        do
+        {
+            randX = Random.Range(0, 10000) % 100;
+            randY = Random.Range(0, 10000) % 100;
+        }
+        while (!mapData[randX, randY]);
+        
+
+        character.GetComponent<AstarCharacter>().xLoc = randX;
+        character.GetComponent<AstarCharacter>().yLoc = randY;
+
+        character.transform.position = new Vector3(randX - x / 2 + .5f, 11, -1 * randY + y/2 - .5f);
+    }
+
+    //test to display mapdata, red shows available spaces 
+    private void TestMapData()
+    {
+        for (int i = 0; i < y; i++)
+        {
+            for (int j = 0; j < x; j++)
+            {
+                if(mapData[j,i])
+                {
+                    Instantiate(testBlock, new Vector3(j - x / 2 + .5f, 10, -i + y / 2 - .5f), Quaternion.identity);
+                }
+            }
+        }
     }
 
     public List<Vector2> CreateRandomPath(int charX, int charY)
@@ -350,7 +431,7 @@ public class MapManager : MonoBehaviour {
         while(currentLocation.Value != -1 && currentLocation.Key != -1)
         {
             //calculate the physical location
-            locationToAdd = new Vector2(currentLocation.Key - (x / 2) + .5f, -1 * currentLocation.Value - (x / 2) - .5f);
+            locationToAdd = new Vector2(currentLocation.Key - (x / 2) + .5f, -1 * currentLocation.Value + (y / 2) - .5f);
 
             //insert the new location into the beginning of the enemyPath
             path.Insert(0, locationToAdd);
