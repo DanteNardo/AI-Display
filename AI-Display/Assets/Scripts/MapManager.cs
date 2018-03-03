@@ -11,10 +11,12 @@ public class MapManager : MonoBehaviour {
 
     public GameObject testBlock;
 
+    public GameObject pathBlock;
+
     public GameObject character;
 
-    private int x = 100;
-    private int y = 100;
+    public int x = 100;
+    public int y = 100;
 
     //true: location can be moved to, false: location can't be oved to
     public bool[,] mapData;
@@ -73,7 +75,7 @@ public class MapManager : MonoBehaviour {
             }
         }
 
-        TestMapData();
+        //TestMapData();
     }
 
 
@@ -94,6 +96,12 @@ public class MapManager : MonoBehaviour {
         character.GetComponent<AstarCharacter>().yLoc = randY;
 
         character.transform.position = new Vector3(randX - x / 2 + .5f, 11, -1 * randY + y/2 - .5f);
+
+        character.transform.position = new Vector3(character.transform.position.x, 
+                                                    character.transform.position.y + character.GetComponent<AstarCharacter>().GetHeight(), 
+                                                    character.transform.position.z);
+
+        character.GetComponent<AstarCharacter>().AssignPath(CreateRandomPath(randX, randY));
     }
 
     //test to display mapdata, red shows available spaces 
@@ -123,8 +131,7 @@ public class MapManager : MonoBehaviour {
             destX = (int)(Random.Range(0, 1000000) % x);
             destY = (int)(Random.Range(0, 1000000) % y);
         }
-        while (destX == charX && destY == charY);
-
+        while (destX == charX && destY == charY && mapData[destX, destY]);
 
         return CreatePath(charX, charY, destX, destY);
     }
@@ -136,6 +143,8 @@ public class MapManager : MonoBehaviour {
 
         //2D array that keeps track of visited nodes
         bool[,] availableNodes = new bool[x,y];
+
+        float[,] distanceMoved = new float[x, y];
 
 
         //copy the data from the  map, get blocked nodes
@@ -153,6 +162,9 @@ public class MapManager : MonoBehaviour {
         //double to keep track of the heuristic value
         float heur = 0;
 
+        //value for calulating temp priority values
+        float tempDistance;
+
         //ints to hold data in the checking of locations
         int currentNodeX;
         int currentNodeY;
@@ -162,6 +174,10 @@ public class MapManager : MonoBehaviour {
 
         //insert the start location
         prq.Insert(0, new KeyValuePair<int, int>(startX, startY));
+
+        heur = Mathf.Sqrt((destX - startX) * (destX - startX) + (destY - startY) * (destY - startY));
+
+        distanceMoved[startX, startY] = 0;
 
         //place a signal value in the pathParents
         pathParent[startX, startY] = new KeyValuePair<int, int>(-1, -1);
@@ -195,17 +211,20 @@ public class MapManager : MonoBehaviour {
             nextNodeX = currentNodeX - 1;
             nextNodeY = currentNodeY;
 
+
+            heur = CalcHeuristic(destX, destY, nextNodeX, nextNodeY);
+
             //check that the new location is valid
             if (nextNodeX >= 0)
             {
                 //check if the tile is available
                 if(availableNodes[nextNodeX, nextNodeY])
                 {
-                    //calculate the heuristic to the destination
-                    heur = Mathf.Sqrt( (destX - nextNodeX) * (destX - nextNodeX) + (destY - nextNodeY) * (destY - nextNodeY));
+                    //store the distance moved
+                    distanceMoved[nextNodeX, nextNodeY] = distanceMoved[currentNodeX, currentNodeY] + 1;
 
                     //add the new node to the heap with the weighted heuristic value
-                    prq.Insert(currentNodeData.Key + 1 + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+                    prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
 
                     //add the parent location of this new node
                     pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
@@ -213,6 +232,24 @@ public class MapManager : MonoBehaviour {
                     //update the available node array
                     availableNodes[nextNodeX, nextNodeY] = false;
                 }
+                
+                else
+                {
+                    tempDistance = distanceMoved[currentNodeX, currentNodeY] + 1;
+
+                    if(tempDistance < distanceMoved[nextNodeX, nextNodeY])
+                    {
+                        //replace the distance moved
+                        distanceMoved[nextNodeX, nextNodeY] = tempDistance;
+
+                        //add the new node to the heap with the weighted heuristic value
+                        prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+
+                        //add the parent location of this new node
+                        pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+                    }
+                }
+                
             }
 
 
@@ -220,23 +257,44 @@ public class MapManager : MonoBehaviour {
             nextNodeX = currentNodeX + 1;
             nextNodeY = currentNodeY;
 
+
+            heur = CalcHeuristic(destX, destY, nextNodeX, nextNodeY);
+
+
             //check that the new location is valid
             if (nextNodeX < x)
             {
                 //check if the tile is available
                 if (availableNodes[nextNodeX, nextNodeY])
                 {
-                    //calculate the heuristic to the destination
-                    heur = Mathf.Sqrt((destX - nextNodeX) * (destX - nextNodeX) + (destY - nextNodeY) * (destY - nextNodeY));
+                    //store the distance moved
+                    distanceMoved[nextNodeX, nextNodeY] = distanceMoved[currentNodeX, currentNodeY] + 1;
 
                     //add the new node to the heap with the weighted heuristic value
-                    prq.Insert(currentNodeData.Key + 1 + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+                    prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
 
                     //add the parent location of this new node
                     pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
 
                     //update the available node array
                     availableNodes[nextNodeX, nextNodeY] = false;
+                }
+
+                else
+                {
+                    tempDistance = distanceMoved[currentNodeX, currentNodeY] + 1;
+
+                    if (tempDistance < distanceMoved[nextNodeX, nextNodeY])
+                    {
+                        //replace the distance moved
+                        distanceMoved[nextNodeX, nextNodeY] = tempDistance;
+
+                        //add the new node to the heap with the weighted heuristic value
+                        prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+
+                        //add the parent location of this new node
+                        pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+                    }
                 }
             }
 
@@ -245,23 +303,44 @@ public class MapManager : MonoBehaviour {
             nextNodeX = currentNodeX;
             nextNodeY = currentNodeY - 1;
 
+
+            heur = CalcHeuristic(destX, destY, nextNodeX, nextNodeY);
+
+
             //check that the new location is valid
             if (nextNodeY >= 0)
             {
                 //check if the tile is available
                 if (availableNodes[nextNodeX, nextNodeY])
                 {
-                    //calculate the heuristic to the destination
-                    heur = Mathf.Sqrt((destX - nextNodeX) * (destX - nextNodeX) + (destY - nextNodeY) * (destY - nextNodeY));
+                    //store the distance moved
+                    distanceMoved[nextNodeX, nextNodeY] = distanceMoved[currentNodeX, currentNodeY] + 1;
 
                     //add the new node to the heap with the weighted heuristic value
-                    prq.Insert(currentNodeData.Key + 1 + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+                    prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
 
                     //add the parent location of this new node
                     pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
 
                     //update the available node array
                     availableNodes[nextNodeX, nextNodeY] = false;
+                }
+
+                else
+                {
+                    tempDistance = distanceMoved[currentNodeX, currentNodeY] + 1;
+
+                    if (tempDistance < distanceMoved[nextNodeX, nextNodeY])
+                    {
+                        //replace the distance moved
+                        distanceMoved[nextNodeX, nextNodeY] = tempDistance;
+
+                        //add the new node to the heap with the weighted heuristic value
+                        prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+
+                        //add the parent location of this new node
+                        pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+                    }
                 }
             }
 
@@ -270,23 +349,44 @@ public class MapManager : MonoBehaviour {
             nextNodeX = currentNodeX;
             nextNodeY = currentNodeY + 1;
 
+
+            heur = CalcHeuristic(destX, destY, nextNodeX, nextNodeY);
+
+
             //check that the new location is valid
             if (nextNodeY < y)
             {
                 //check if the tile is available
                 if (availableNodes[nextNodeX, nextNodeY])
                 {
-                    //calculate the heuristic to the destination
-                    heur = Mathf.Sqrt((destX - nextNodeX) * (destX - nextNodeX) + (destY - nextNodeY) * (destY - nextNodeY));
+                    //store the distance moved
+                    distanceMoved[nextNodeX, nextNodeY] = distanceMoved[currentNodeX, currentNodeY] + 1;
 
                     //add the new node to the heap with the weighted heuristic value
-                    prq.Insert(currentNodeData.Key + 1 + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+                    prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
 
                     //add the parent location of this new node
                     pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
 
                     //update the available node array
                     availableNodes[nextNodeX, nextNodeY] = false;
+                }
+
+                else
+                {
+                    tempDistance = distanceMoved[currentNodeX, currentNodeY] + 1;
+
+                    if (tempDistance < distanceMoved[nextNodeX, nextNodeY])
+                    {
+                        //replace the distance moved
+                        distanceMoved[nextNodeX, nextNodeY] = tempDistance;
+
+                        //add the new node to the heap with the weighted heuristic value
+                        prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+
+                        //add the parent location of this new node
+                        pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+                    }
                 }
             }
 
@@ -295,121 +395,200 @@ public class MapManager : MonoBehaviour {
             ///         CHECK DIAGONAL LOCATIONS
 
 
+            
 
-            //get value of the node from top left
-            nextNodeX = currentNodeX - 1;
-            nextNodeY = currentNodeY - 1;
+               //get value of the node from top left
+               nextNodeX = currentNodeX - 1;
+               nextNodeY = currentNodeY - 1;
 
-            //check that the new location is valid
-            if (nextNodeX >= 0 && nextNodeY >= 0)
-            {
-                //check if the tile is available
-                if (availableNodes[nextNodeX, nextNodeY])
-                {
-                    //check if the nodes that are adjacent to the next node and current node are not blocked
-                    if(mapData[nextNodeX, currentNodeY] && mapData[currentNodeX, nextNodeY])
-                    {
-                        //calculate the heuristic to the destination
-                        heur = Mathf.Sqrt((destX - nextNodeX) * (destX - nextNodeX) + (destY - nextNodeY) * (destY - nextNodeY));
+               heur = CalcHeuristic(destX, destY, nextNodeX, nextNodeY);
 
-                        //add the new node to the heap with the weighted heuristic value (sqrt2 now because it is diagonal)
-                        prq.Insert(currentNodeData.Key + Mathf.Sqrt(2) + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+               //check that the new location is valid
+               if (nextNodeX >= 0 && nextNodeY >= 0)
+               {
+                   //check if the tile is available
+                   if (availableNodes[nextNodeX, nextNodeY])
+                   {
+                       //check if the nodes that are adjacent to the next node and current node are not blocked
+                       if(mapData[nextNodeX, currentNodeY] && mapData[currentNodeX, nextNodeY])
+                       {
+                           //store the distance moved
+                           distanceMoved[nextNodeX, nextNodeY] = distanceMoved[currentNodeX, currentNodeY] + Mathf.Sqrt(2);
 
-                        //add the parent location of this new node
-                        pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+                           //add the new node to the heap with the weighted heuristic value
+                           prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
 
-                        //update the available node array
-                        availableNodes[nextNodeX, nextNodeY] = false;
-                    }
-                }
-            }
+                           //add the parent location of this new node
+                           pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
 
+                           //update the available node array
+                           availableNodes[nextNodeX, nextNodeY] = false;
+                       }
+                   }
 
-            //get value of the node from top right
-            nextNodeX = currentNodeX + 1;
-            nextNodeY = currentNodeY - 1;
+                   else
+                   {
+                       tempDistance = distanceMoved[currentNodeX, currentNodeY] + Mathf.Sqrt(2);
 
-            //check that the new location is valid
-            if (nextNodeX < x && nextNodeY >= 0)
-            {
-                //check if the tile is available
-                if (availableNodes[nextNodeX, nextNodeY])
-                {
-                    //check if the nodes that are adjacent to the next node and current node are not blocked
-                    if (mapData[nextNodeX, currentNodeY] && mapData[currentNodeX, nextNodeY])
-                    {
-                        //calculate the heuristic to the destination
-                        heur = Mathf.Sqrt((destX - nextNodeX) * (destX - nextNodeX) + (destY - nextNodeY) * (destY - nextNodeY));
+                       if (tempDistance < distanceMoved[nextNodeX, nextNodeY])
+                       {
+                           //store the priority value to be compared later
+                           distanceMoved[nextNodeX, nextNodeY] = tempDistance;
 
-                        //add the new node to the heap with the weighted heuristic value (sqrt2 now because it is diagonal)
-                        prq.Insert(currentNodeData.Key + Mathf.Sqrt(2) + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+                           //add the new node to the heap with the weighted heuristic value
+                           prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
 
-                        //add the parent location of this new node
-                        pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
-
-                        //update the available node array
-                        availableNodes[nextNodeX, nextNodeY] = false;
-                    }
-                }
-            }
+                           //add the parent location of this new node
+                           pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+                       }
+                   }
+               }
 
 
-            //get value of the node from bottom left
-            nextNodeX = currentNodeX - 1;
-            nextNodeY = currentNodeY + 1;
+               //get value of the node from top right
+               nextNodeX = currentNodeX + 1;
+               nextNodeY = currentNodeY - 1;
 
-            //check that the new location is valid
-            if (nextNodeX >= 0 && nextNodeY < y)
-            {
-                //check if the tile is available
-                if (availableNodes[nextNodeX, nextNodeY])
-                {
-                    //check if the nodes that are adjacent to the next node and current node are not blocked
-                    if (mapData[nextNodeX, currentNodeY] && mapData[currentNodeX, nextNodeY])
-                    {
-                        //calculate the heuristic to the destination
-                        heur = Mathf.Sqrt((destX - nextNodeX) * (destX - nextNodeX) + (destY - nextNodeY) * (destY - nextNodeY));
+               heur = CalcHeuristic(destX, destY, nextNodeX, nextNodeY);
 
-                        //add the new node to the heap with the weighted heuristic value (sqrt2 now because it is diagonal)
-                        prq.Insert(currentNodeData.Key + Mathf.Sqrt(2) + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+               //check that the new location is valid
+               if (nextNodeX < x && nextNodeY >= 0)
+               {
+                   //check if the tile is available
+                   if (availableNodes[nextNodeX, nextNodeY])
+                   {
+                       //check if the nodes that are adjacent to the next node and current node are not blocked
+                       if (mapData[nextNodeX, currentNodeY] && mapData[currentNodeX, nextNodeY])
+                       {
+                           //store the distance moved
+                           distanceMoved[nextNodeX, nextNodeY] = distanceMoved[currentNodeX, currentNodeY] + Mathf.Sqrt(2);
 
-                        //add the parent location of this new node
-                        pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+                           //add the new node to the heap with the weighted heuristic value
+                           prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
 
-                        //update the available node array
-                        availableNodes[nextNodeX, nextNodeY] = false;
-                    }
-                }
-            }
+                           //add the parent location of this new node
+                           pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+
+                           //update the available node array
+                           availableNodes[nextNodeX, nextNodeY] = false;
+                       }
+                   }
+
+                   else
+                   {
+                       tempDistance = distanceMoved[currentNodeX, currentNodeY] + Mathf.Sqrt(2);
+
+                       if (tempDistance < distanceMoved[nextNodeX, nextNodeY])
+                       {
+                           //store the priority value to be compared later
+                           distanceMoved[nextNodeX, nextNodeY] = tempDistance;
+
+                           //add the new node to the heap with the weighted heuristic value
+                           prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+
+                           //add the parent location of this new node
+                           pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+                       }
+                   }
+               }
 
 
-            //get value of the node from bottom right
-            nextNodeX = currentNodeX + 1;
-            nextNodeY = currentNodeY + 1;
+               //get value of the node from bottom left
+               nextNodeX = currentNodeX - 1;
+               nextNodeY = currentNodeY + 1;
 
-            //check that the new location is valid
-            if (nextNodeX >= 0 && nextNodeY < y)
-            {
-                //check if the tile is available
-                if (availableNodes[nextNodeX, nextNodeY])
-                {
-                    //check if the nodes that are adjacent to the next node and current node are not blocked
-                    if (mapData[nextNodeX, currentNodeY] && mapData[currentNodeX, nextNodeY])
-                    {
-                        //calculate the heuristic to the destination
-                        heur = Mathf.Sqrt((destX - nextNodeX) * (destX - nextNodeX) + (destY - nextNodeY) * (destY - nextNodeY));
+               heur = CalcHeuristic(destX, destY, nextNodeX, nextNodeY);
 
-                        //add the new node to the heap with the weighted heuristic value (sqrt2 now because it is diagonal)
-                        prq.Insert(currentNodeData.Key + Mathf.Sqrt(2) + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+               //check that the new location is valid
+               if (nextNodeX >= 0 && nextNodeY < y)
+               {
+                   //check if the tile is available
+                   if (availableNodes[nextNodeX, nextNodeY])
+                   {
+                       //check if the nodes that are adjacent to the next node and current node are not blocked
+                       if (mapData[nextNodeX, currentNodeY] && mapData[currentNodeX, nextNodeY])
+                       {
+                           //store the distance moved
+                           distanceMoved[nextNodeX, nextNodeY] = distanceMoved[currentNodeX, currentNodeY] + Mathf.Sqrt(2);
 
-                        //add the parent location of this new node
-                        pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+                           //add the new node to the heap with the weighted heuristic value
+                           prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
 
-                        //update the available node array
-                        availableNodes[nextNodeX, nextNodeY] = false;
-                    }
-                }
-            }
+                           //add the parent location of this new node
+                           pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+
+                           //update the available node array
+                           availableNodes[nextNodeX, nextNodeY] = false;
+                       }
+                   }
+
+                   else
+                   {
+                       tempDistance = distanceMoved[currentNodeX, currentNodeY] + Mathf.Sqrt(2);
+
+                       if (tempDistance < distanceMoved[nextNodeX, nextNodeY])
+                       {
+                           //store the priority value to be compared later
+                           distanceMoved[nextNodeX, nextNodeY] = tempDistance;
+
+                           //add the new node to the heap with the weighted heuristic value
+                           prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+
+                           //add the parent location of this new node
+                           pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+                       }
+                   }
+               }
+
+
+               //get value of the node from bottom right
+               nextNodeX = currentNodeX + 1;
+               nextNodeY = currentNodeY + 1;
+
+               //check that the new location is valid
+               if (nextNodeX < x && nextNodeY < y)
+               {
+                   //check if the tile is available
+                   if (availableNodes[nextNodeX, nextNodeY])
+                   {
+                       //check if the nodes that are adjacent to the next node and current node are not blocked
+                       if (mapData[nextNodeX, currentNodeY] && mapData[currentNodeX, nextNodeY])
+                       {
+                           //store the distance moved
+                           distanceMoved[nextNodeX, nextNodeY] = distanceMoved[currentNodeX, currentNodeY] + Mathf.Sqrt(2);
+
+                           //add the new node to the heap with the weighted heuristic value
+                           prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+
+                           //add the parent location of this new node
+                           pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+
+                           //update the available node array
+                           availableNodes[nextNodeX, nextNodeY] = false;
+                       }
+                   }
+
+                   else
+                   {
+                       tempDistance = distanceMoved[currentNodeX, currentNodeY] + Mathf.Sqrt(2);
+
+                       if (tempDistance < distanceMoved[nextNodeX, nextNodeY])
+                       {
+                           //store the priority value to be compared later
+                           distanceMoved[nextNodeX, nextNodeY] = tempDistance;
+
+                           //add the new node to the heap with the weighted heuristic value
+                           prq.Insert(distanceMoved[nextNodeX, nextNodeY] + heur, new KeyValuePair<int, int>(nextNodeX, nextNodeY));
+
+                           //add the parent location of this new node
+                           pathParent[nextNodeX, nextNodeY] = currentNodeData.Value;
+                       }
+                   }
+               }
+
+
+               
+
 
 
             //check the priority queue
@@ -433,6 +612,28 @@ public class MapManager : MonoBehaviour {
             //calculate the physical location
             locationToAdd = new Vector2(currentLocation.Key - (x / 2) + .5f, -1 * currentLocation.Value + (y / 2) - .5f);
 
+            if(currentLocation.Key == destX && currentLocation.Value == destY)
+            {
+                //Raycast to store Raycast data
+                RaycastHit hit;
+
+                //ray pointing down from the destination
+                Ray downRay = new Ray(new Vector3(locationToAdd.x, 15f, locationToAdd.y), -1 * Vector3.up);
+
+
+                Physics.Raycast(downRay, out hit);
+
+                Destroy(GameObject.FindGameObjectWithTag("AstarGoal"));
+
+                Instantiate(pathBlock, new Vector3(locationToAdd.x, 15f + 1 - hit.distance, locationToAdd.y), Quaternion.identity);
+
+                
+            }
+
+            //displays the path
+            //Instantiate(pathBlock, new Vector3(locationToAdd.x, 11f, locationToAdd.y), Quaternion.identity);
+
+
             //insert the new location into the beginning of the enemyPath
             path.Insert(0, locationToAdd);
 
@@ -440,6 +641,24 @@ public class MapManager : MonoBehaviour {
             currentLocation = pathParent[currentLocation.Key, currentLocation.Value];
         }
 
+        path.RemoveAt(0);
+
         return path;
+    }
+
+    private float CalcHeuristic(int destX, int destY, int currentX, int currentY)
+    {
+        int heurX = Mathf.Abs(destX - currentX);
+        int heurY = Mathf.Abs(destY - currentY);
+
+
+        if (heurX > heurY)
+        {
+            return heurX - heurY + (heurY * Mathf.Sqrt(2));
+        }
+        else
+        {
+            return heurY - heurX + (heurX * Mathf.Sqrt(2));
+        }
     }
 }
