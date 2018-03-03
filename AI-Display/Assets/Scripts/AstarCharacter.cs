@@ -21,16 +21,21 @@ public class AstarCharacter : MonoBehaviour
 
     private Ray downRay;
 
+    private bool active;
+
     // Use this for initialization
     void Start()
     {
-        
+        active = true;
     }
 
     // Update is called once per frame
     void Update()
     {
-        FollowPath();
+        if(active)
+        {
+            FollowPath();
+        }
     }
 
     public void AssignPath(List<Vector2> newPath)
