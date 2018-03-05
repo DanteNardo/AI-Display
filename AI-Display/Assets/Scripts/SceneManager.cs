@@ -5,7 +5,9 @@ using UnityEngine.AI;
 
 public class SceneManager : MonoBehaviour
 {
+    public GameObject aStar;
     public List<GameObject> flockers;
+    private List<Flocker> flockerComps;
     private GameObject[] temp;
 
     public GameObject target;
@@ -29,11 +31,13 @@ public class SceneManager : MonoBehaviour
     {
 
         flockers = new List<GameObject>();
+        flockerComps = new List<Flocker>();
         temp = new GameObject[GameObject.FindGameObjectsWithTag("Flocker").Length];
         temp = GameObject.FindGameObjectsWithTag("Flocker");
         foreach (GameObject g in temp)
         {
             flockers.Add(g);
+            flockerComps.Add(g.GetComponent<Flocker>());
         }
 
         this.target = GameObject.FindGameObjectWithTag("Target");
@@ -73,11 +77,9 @@ public class SceneManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
-        if( Input.GetKeyDown(KeyCode.D))
-        {
-            debugMode = !debugMode;
-        }
+        // Check key presses
+        CheckKeys();
+
 
         avgDirection = Vector3.zero;
         avgPosition = Vector3.zero;
@@ -248,6 +250,99 @@ public class SceneManager : MonoBehaviour
         }
 
         return 0.0f;
+    }
+
+    private void CheckKeys()
+    {
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            debugMode = !debugMode;
+        }
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            ToggleAStar();
+        }
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            ToggleFlocking();
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            SetStateDefault();
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            SetStateTightKnit();
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            SetStateSpreadApart();
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            SetStateFlee();
+        }
+    }
+
+    private void ToggleAStar()
+    {
+        aStar.GetComponent<AstarCharacter>().enabled = !aStar.GetComponent<AstarCharacter>().enabled;
+    }
+
+    private void ToggleFlocking()
+    {
+        foreach (var f in flockerComps)
+        {
+            f.enabled = !f.enabled;
+        }
+    }
+
+    public void SetStateDefault()
+    {
+        foreach (var flocker in flockerComps)
+        {
+            flocker.alignmentWeight  = 10;
+            flocker.cohesionWeight   = 3;
+            flocker.separationWeight = 5;
+            flocker.targetWeight     = 3;
+            flocker.safeDistance     = 2;
+        }
+    }
+
+    public void SetStateTightKnit()
+    {
+        foreach (var flocker in flockerComps)
+        {
+            flocker.alignmentWeight  = 5;
+            flocker.cohesionWeight   = 3;
+            flocker.separationWeight = 5;
+            flocker.targetWeight     = 3;
+            flocker.safeDistance     = 1;
+        }
+    }
+
+    public void SetStateSpreadApart()
+    {
+        foreach (var flocker in flockerComps)
+        {
+            flocker.alignmentWeight  = 2;
+            flocker.cohesionWeight   = 1;
+            flocker.separationWeight = 10;
+            flocker.targetWeight     = 3;
+            flocker.safeDistance     = 5;
+        }
+    }
+
+    public void SetStateFlee()
+    {
+        foreach (var flocker in flockerComps)
+        {
+            flocker.alignmentWeight  = 0;
+            flocker.cohesionWeight   = 0;
+            flocker.separationWeight = 5;
+            flocker.targetWeight     = 0;
+            flocker.safeDistance     = 5;
+        }
     }
 
 }
