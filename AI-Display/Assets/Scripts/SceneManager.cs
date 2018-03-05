@@ -2,12 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.AI;
+using System;
 
 public class SceneManager : MonoBehaviour
 {
     public GameObject aStar;
     public List<GameObject> flockers;
     private List<Flocker> flockerComps;
+    private Vector3[] originalPositions;
     private GameObject[] temp;
 
     public GameObject target;
@@ -40,6 +42,12 @@ public class SceneManager : MonoBehaviour
             flockerComps.Add(g.GetComponent<Flocker>());
         }
 
+        originalPositions = new Vector3[flockers.Count];
+        for( int index = 0; index < flockers.Count; index++)
+        {
+            originalPositions[index] = flockers[index].transform.position;
+        }
+
         this.target = GameObject.FindGameObjectWithTag("Target");
 
         avgDirection = Vector3.zero;
@@ -56,10 +64,7 @@ public class SceneManager : MonoBehaviour
         cornerIndex = 0;
         target.transform.position = path.corners[cornerIndex];
 
-
-      
-
-
+        
         temp = new GameObject[ GameObject.FindGameObjectsWithTag( "Obstacle" ).Length ];
         temp = GameObject.FindGameObjectsWithTag( "Obstacle" );
         obstacles = new List<GameObject>();
@@ -165,12 +170,12 @@ public class SceneManager : MonoBehaviour
                 cornerIndex++;
                 if(cornerIndex >= path.corners.Length)
                 {
-                    endGoal.transform.position = new Vector3(Random.value * 80, 0.0f, Random.value * 80);
+                    endGoal.transform.position = new Vector3(UnityEngine.Random.value * 80, 0.0f, UnityEngine.Random.value * 80);
                     endGoal.transform.position += new Vector3(0, GetHeight(endGoal.transform.position), 0);
 
                     while (!(NavMesh.CalculatePath(flockers[0].transform.position, endGoal.transform.position, 1 << NavMesh.GetAreaFromName("Walkable"), path)))
                     {
-                        endGoal.transform.position = new Vector3(Random.value * 80, 0.0f, Random.value * 80);
+                        endGoal.transform.position = new Vector3(UnityEngine.Random.value * 80, 0.0f, UnityEngine.Random.value * 80);
                         endGoal.transform.position += new Vector3(0, GetHeight(endGoal.transform.position), 0);
                     }
 
@@ -266,6 +271,10 @@ public class SceneManager : MonoBehaviour
         {
             ToggleFlocking();
         }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            ResetPositions();
+        }
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             SetStateDefault();
@@ -281,6 +290,14 @@ public class SceneManager : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha4))
         {
             SetStateFlee();
+        }
+    }
+
+    private void ResetPositions()
+    {
+        for(int index = 0; index < flockers.Count; index++)
+        {
+            flockers[index].transform.position = originalPositions[index];
         }
     }
 
