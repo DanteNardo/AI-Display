@@ -39,11 +39,11 @@ public class CameraManager : MonoBehaviour
 		currentCameraIndex = 0;
 
 		for (int i = 1; i < cameras.Length; i++)
-			cameras[i].gameObject.SetActive(false);
+            cameras[i].gameObject.GetComponent<Camera>().enabled = false;
 
-		if (cameras.Length > 0)
-			cameras[0].gameObject.SetActive(true);
-	}
+        if (cameras.Length > 0)
+            cameras[0].gameObject.GetComponent<Camera>().enabled = true;
+    }
 
 	/// <summary>
 	/// Handles the logic for switching between cameras in the scene.
@@ -57,16 +57,16 @@ public class CameraManager : MonoBehaviour
 			// Deactivates current camera and activates next current camera
 			if (currentCameraIndex < cameras.Length)
 			{
-				cameras[currentCameraIndex-1].gameObject.SetActive(false);
-				cameras[currentCameraIndex].gameObject.SetActive(true);
-			}
+				cameras[currentCameraIndex-1].gameObject.GetComponent<Camera>().enabled = false;
+                cameras[currentCameraIndex].gameObject.GetComponent<Camera>().enabled = true;
+            }
 			// Cycles back to first camera
 			else
 			{
-				cameras[currentCameraIndex-1].gameObject.SetActive(false);
-				currentCameraIndex = 0;
-				cameras[currentCameraIndex].gameObject.SetActive(true);
-			}
+				cameras[currentCameraIndex-1].gameObject.GetComponent<Camera>().enabled = false;
+                currentCameraIndex = 0;
+				cameras[currentCameraIndex].gameObject.GetComponent<Camera>().enabled = true;
+            }
 		}
 	}
 
