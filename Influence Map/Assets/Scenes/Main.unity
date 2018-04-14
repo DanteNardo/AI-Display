@@ -7903,6 +7903,8 @@ MonoBehaviour:
     type: 2}
   influencer4: {fileID: 1492013641061504, guid: e556e07e2373171498f051606695f9a2,
     type: 2}
+  GreenTeamParent: {fileID: 412492307}
+  RedTeamParent: {fileID: 1769446323}
   overheadCamera: {fileID: 1907714889}
   terrain: {fileID: 2106568531}
   bridge: {fileID: 811361293}
