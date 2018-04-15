@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2017
+# Visual Studio 15
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AI-Display.Plugins", "AI-Display.Plugins.csproj", "{E4086698-4F40-21D7-3608-48703DB136F2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AI-Display", "AI-Display.csproj", "{AB99AAFF-CE76-437D-D850-2D5B08A5BD50}"

@@ -158,11 +158,13 @@ public class InfluenceMapManager : MonoBehaviour {
 
     private void PlaceInfluencer(GameObject influencer)
     {
+        //Call influence display update at end
+
         //make a ray from the mouse
         ray = overheadCamera.ScreenPointToRay(Input.mousePosition);
-
+        LayerMask layerMask = ~(1 << 2);
         //cast a ray and check if it is valid
-        if(Physics.Raycast(ray, out hit) && (hit.transform == terrain.transform || hit.transform == bridge.transform))
+        if (Physics.Raycast(ray, out hit,1000,layerMask) && (hit.transform == terrain.transform || hit.transform == bridge.transform))
         {
             //get location for the map array manipulation
             Vector2 hitLocation = new Vector2(hit.point.x, hit.point.z);
@@ -200,5 +202,6 @@ public class InfluenceMapManager : MonoBehaviour {
             }
             
         }
+        InfluenceMap.Instance.gameObject.GetComponent<InfluenceMapDisplay>().UpdateDisplay();
     }
 }
