@@ -188,11 +188,13 @@ public class InfluenceMapManager : MonoBehaviour {
                 if(team)
                 {
                     tempInfluencer.transform.parent = GreenTeamParent.transform;
+                    InfluenceMap.Instance.AddGreenUnit(tempInfluencer);
                 }
                 //else it is set to red team
                 else
                 {
                     tempInfluencer.transform.parent = RedTeamParent.transform;
+                    InfluenceMap.Instance.AddRedUnit(tempInfluencer);
                 }
             }
             

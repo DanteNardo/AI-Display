@@ -1,11 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class InfluenceMap : MonoBehaviour
 {
+    // Singleton member
+    public static InfluenceMap Instance = null;
 
-    // Constants
+    // Constants for readability - no magic numbers
     private const int RED = 1;
     private const int GREEN = -1;
     private const float NO_INFLUENCE = 0.0f;
@@ -17,22 +18,27 @@ public class InfluenceMap : MonoBehaviour
     private const int WEST = -1;
     private const int EAST = 1;
 
+    // The relevant influence data
     public int size;
-    private float[,] map;
-    private char[,] placements;
-    private List<Red> reds;
-    private List<Green> greens;
+    public float[,] map;
+    public char[,] placements;
+
+    // Correctly handles singleton behavior
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+        }
+    }
 
     private void Start()
     {
         GenerateArrays();
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-        }
     }
 
     private void GenerateArrays()
@@ -49,22 +55,21 @@ public class InfluenceMap : MonoBehaviour
                 placements[i, j] = EMPTY;
             }
         }
-
-        reds = new List<Red>();
-        greens = new List<Green>();
     }
 
     // Creates influence for a unit on the map
-    private void CreateInfluence(int startX, int startZ, int color)
+    private void CreateInfluence(int startX, int startZ, int color, int strength)
     {
-        CreateInfluence(startX, startZ, WEST, NO_DIRECTION, color);
-        CreateInfluence(startX, startZ, WEST, NORTH, color);
-        CreateInfluence(startX, startZ, WEST, SOUTH, color);
-        CreateInfluence(startX, startZ, EAST, NO_DIRECTION, color);
-        CreateInfluence(startX, startZ, EAST, NORTH, color);
-        CreateInfluence(startX, startZ, EAST, SOUTH, color);
-        CreateInfluence(startX, startZ, NO_DIRECTION, NORTH, color);
-        CreateInfluence(startX, startZ, NO_DIRECTION, SOUTH, color);
+        // Iterate through influence map
+        for (int x = 0; x < size; x++)
+        {
+            for (int z = 0; z < size; z++)
+            {
+                // Generate the influence value from distance to influencer
+                int distance = Distance(x, z, startX, startZ);
+                float influence = ModInfluence(x, z, distance, color, strength);
+            }
+        }
     }
 
     // Creates influence in a specific direction for a unit
@@ -94,6 +99,7 @@ public class InfluenceMap : MonoBehaviour
                     return;
                 }
             }
+            else return;
         }
     }
 
@@ -104,10 +110,14 @@ public class InfluenceMap : MonoBehaviour
     }
 
     // Modifies the influence of a location in the grid based on distance and color
-    private float ModInfluence(int x, int z, int distance, int color)
+    private float ModInfluence(int x, int z, int distance, int color, int strength)
     {
         // Generate influence, add it to current influence, and then return the value
-        float influence = Mathf.Clamp(FULL_INFLUENCE - (0.1f * distance), 0.0f, 1.0f) * color;
+        // Some units are stronger than others. strengthMod extends their influence.
+        float strengthMod = strength * 0.1f;
+        float influence = Mathf.Clamp(FULL_INFLUENCE - (0.1f * distance), 0.0f, 1.0f);
+        influence += strengthMod;
+        influence *= color;
         map[x, z] += influence;
         return influence;
     }
@@ -118,27 +128,27 @@ public class InfluenceMap : MonoBehaviour
         return Mathf.Abs(x2 - x1) + Mathf.Abs(z2 - z1);
     }
 
-    public void AddRedUnit(Red unit)
+    public void AddRedUnit(GameObject unit)
     {
         // Place the red unit
-        int x = (int)Mathf.Floor(unit.gameObject.transform.position.x);
-        int z = (int)Mathf.Floor(unit.gameObject.transform.position.z);
-        placements[x, z] = 'r';
-        map[x, z] = FULL_INFLUENCE * RED;
+        int x = (int)Mathf.Floor(unit.transform.position.x);
+        int z = (int)Mathf.Floor(unit.transform.position.z);
+        Instance.placements[x, z] = 'r';
+        Instance.map[x, z] = FULL_INFLUENCE * RED;
 
         // Modify influence map
-        CreateInfluence(x, z, RED);
+        Instance.CreateInfluence(x, z, RED);
     }
 
-    public void AddGreenUnit(Green unit)
+    public void AddGreenUnit(GameObject unit)
     {
         // Place the red unit
-        int x = (int)Mathf.Floor(unit.gameObject.transform.position.x);
-        int z = (int)Mathf.Floor(unit.gameObject.transform.position.z);
-        placements[x, z] = 'g';
-        map[x, z] = FULL_INFLUENCE * GREEN;
+        int x = (int)Mathf.Floor(unit.transform.position.x);
+        int z = (int)Mathf.Floor(unit.transform.position.z);
+        Instance.placements[x, z] = 'g';
+        Instance.map[x, z] = FULL_INFLUENCE * GREEN;
 
         // Modify influence map
-        CreateInfluence(x, z, GREEN);
+        Instance.CreateInfluence(x, z, GREEN);
     }
 }
