@@ -87,6 +87,11 @@ public class InfluenceMapManager : MonoBehaviour {
         {
             PlaceInfluencer(influencer1);
         }
+        else if (Input.GetKeyDown("m"))
+        {
+            InfluenceMap.Instance.gameObject.GetComponent<InfluenceMapDisplay>().ToggleVisibility();
+
+        }
     }
 
     //get the data for placing influencers in valid places

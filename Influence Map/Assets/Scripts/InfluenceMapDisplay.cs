@@ -8,6 +8,11 @@ public class InfluenceMapDisplay : MonoBehaviour
     public GameObject quad;
     public Material displayMaterial;
     private GameObject[] displayQuads = new GameObject[100 * 100];
+    public GameObject quadHolder;
+
+    Gradient g;
+    GradientColorKey[] gck;
+    GradientAlphaKey[] gak;
 
     // Use this for initialization
     void Start()
@@ -15,11 +20,33 @@ public class InfluenceMapDisplay : MonoBehaviour
         terrain = Terrain.activeTerrain;
 
 
-        for( int outer = 0; outer < 100; outer++)
+        g = new Gradient();
+        gck = new GradientColorKey[3];
+        gak = new GradientAlphaKey[3];
+
+        gck[0].color = Color.green;
+        gck[0].time = 0.0F;
+        gck[1].color = Color.gray;
+        gck[1].time = .5F;
+        gck[1].color = Color.red;
+        gck[1].time = 1F;
+
+        gak[0].alpha = .5f;
+        gak[0].time = 0.0F;
+        gak[1].alpha = .5f;
+        gak[1].time = .5f;
+        gak[2].alpha = .5f;
+        gak[2].time = 1.0F;
+
+        g.SetKeys(gck, gak);
+
+        quadHolder.SetActive(true);
+
+        for ( int outer = 0; outer < 100; outer++)
         {
             for (int inner = 0; inner < 100; inner++)
             {
-                displayQuads[outer * 100 + inner] = Instantiate(quad);
+                displayQuads[outer * 100 + inner] = Instantiate(quad,quadHolder.transform);
                 displayQuads[outer * 100 + inner].layer = 2;
                 //check and see if this is lined up correctly
                 Vector3 position = new Vector3(-50 + inner, 0, -50 + outer);
@@ -28,6 +55,12 @@ public class InfluenceMapDisplay : MonoBehaviour
                 displayQuads[outer * 100 + inner].GetComponent<Renderer>().material.color = new Color(0, 0, 0, .7f);
             }
         }
+        quadHolder.SetActive(false);
+    }
+
+    public void ToggleVisibility()
+    {
+        quadHolder.SetActive(!quadHolder.activeSelf);
     }
 
     // Update is called once per frame
@@ -39,7 +72,9 @@ public class InfluenceMapDisplay : MonoBehaviour
             for (int inner = 0; inner < 100; inner++)
             {
                 displayQuads[(99 -inner) * 100 + outer].GetComponent<Renderer>().material.color = 
-                    Color.Lerp(new Color(0,1,0,.5f), new Color(1, 0, 0, .5f), (InfluenceMap.Instance.map[outer, inner] + 1.0f) / 2.0f);
+                    g.Evaluate(
+                        ((InfluenceMap.Instance.map[outer, inner] + 1.0f) / 2.0f)
+                        );
                 
             }
         }
