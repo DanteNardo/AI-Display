@@ -92,6 +92,10 @@ public class InfluenceMapManager : MonoBehaviour {
             InfluenceMap.Instance.gameObject.GetComponent<InfluenceMapDisplay>().ToggleVisibility();
 
         }
+        else if (Input.GetKeyDown("n"))
+        {
+            InfluenceMap.Instance.gameObject.GetComponent<InfluenceMapDisplay>().ToggleAccurateMode();
+        }
     }
 
     //get the data for placing influencers in valid places

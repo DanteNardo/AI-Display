@@ -9,6 +9,7 @@ public class InfluenceMapDisplay : MonoBehaviour
     public Material displayMaterial;
     private GameObject[] displayQuads = new GameObject[100 * 100];
     public GameObject quadHolder;
+    private bool accurateMode = true;
 
     Gradient g;
     GradientColorKey[] gck;
@@ -63,6 +64,12 @@ public class InfluenceMapDisplay : MonoBehaviour
         quadHolder.SetActive(!quadHolder.activeSelf);
     }
 
+    public void ToggleAccurateMode()
+    {
+        accurateMode = !accurateMode;
+        UpdateDisplay();
+    }
+
     // Update is called once per frame
     public void UpdateDisplay()
     {
@@ -71,11 +78,29 @@ public class InfluenceMapDisplay : MonoBehaviour
         {
             for (int inner = 0; inner < 100; inner++)
             {
-                displayQuads[(99 -inner) * 100 + outer].GetComponent<Renderer>().material.color = 
+                if(accurateMode)
+                { 
+                    displayQuads[(99 -inner) * 100 + outer].GetComponent<Renderer>().material.color = 
                     g.Evaluate(
                         ((InfluenceMap.Instance.map[outer, inner] + 1.0f) / 2.0f)
                         );
-                
+                }
+                else
+                {
+                    if (InfluenceMap.Instance.map[outer, inner] > 0)
+                    {
+                        displayQuads[(99 - inner) * 100 + outer].GetComponent<Renderer>().material.color = Color.red;
+                    }
+                    else if (InfluenceMap.Instance.map[outer, inner] < 0)
+                    {
+                        displayQuads[(99 - inner) * 100 + outer].GetComponent<Renderer>().material.color = Color.green;
+                    }
+                    else
+                    {
+                        displayQuads[(99 - inner) * 100 + outer].GetComponent<Renderer>().material.color = Color.gray;
+                    }
+                    
+                }
             }
         }
     }

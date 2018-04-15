@@ -5573,6 +5573,34 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c6b7fb383a3534b039692b5485b6e739, type: 2}
   m_IsPrefabParent: 0
+--- !u!1 &841449577
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 841449578}
+  m_Layer: 0
+  m_Name: InfluenceMapDisplay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &841449578
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 841449577}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.444313, y: 4.3443856, z: -29.112509}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 19
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &850051503
 GameObject:
   m_ObjectHideFlags: 0
@@ -9767,6 +9795,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   quad: {fileID: 1468584536709458, guid: db61ce2d5ca13594f9db6f3e9be219e6, type: 2}
   displayMaterial: {fileID: 2100000, guid: 923a065e30d3a6e4bbef7a27f23161d2, type: 2}
+  quadHolder: {fileID: 841449577}
 --- !u!1 &1387789125
 GameObject:
   m_ObjectHideFlags: 0

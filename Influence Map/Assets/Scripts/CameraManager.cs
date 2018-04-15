@@ -11,6 +11,7 @@ public class CameraManager : MonoBehaviour
 	public Camera[] cameras;
 	private GUIText text;
 	private int currentCameraIndex;
+    private float cameraSpeed = 20.0f;
 	#endregion
 
 	/// <summary>
@@ -50,7 +51,33 @@ public class CameraManager : MonoBehaviour
 	/// </summary>
 	private void CycleCameras()
 	{
-		if (Input.GetKeyDown(KeyCode.C))
+        if(Input.GetKey(KeyCode.W))
+        {
+            cameras[currentCameraIndex].transform.position += new Vector3(0, 0, cameraSpeed * Time.deltaTime);
+        }
+        if (Input.GetKey(KeyCode.A))
+        {
+            cameras[currentCameraIndex].transform.position += new Vector3(-cameraSpeed * Time.deltaTime, 0, 0);
+        }
+        if (Input.GetKey(KeyCode.S))
+        {
+            cameras[currentCameraIndex].transform.position += new Vector3(0, 0, -cameraSpeed * Time.deltaTime);
+        }
+        if (Input.GetKey(KeyCode.D))
+        {
+            cameras[currentCameraIndex].transform.position += new Vector3(cameraSpeed * Time.deltaTime, 0,0);
+        }
+
+        if (Input.GetKey(KeyCode.Q))
+        {
+            cameras[currentCameraIndex].GetComponent<Camera>().orthographicSize += cameraSpeed * (Time.deltaTime);
+        }
+        if (Input.GetKey(KeyCode.E))
+        {
+            cameras[currentCameraIndex].GetComponent<Camera>().orthographicSize += -cameraSpeed * (Time.deltaTime);
+        }
+
+        if (Input.GetKeyDown(KeyCode.C))
 		{
 			currentCameraIndex++;
 
