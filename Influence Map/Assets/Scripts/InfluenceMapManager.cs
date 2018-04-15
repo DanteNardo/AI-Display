@@ -182,19 +182,20 @@ public class InfluenceMapManager : MonoBehaviour {
                 GameObject tempInfluencer = Instantiate(influencer, placementLocation, Quaternion.identity);
 
                 //set the influencer's stored coordinates to be used in the influence map creation
-                tempInfluencer.GetComponent<Influencer>().SetMapLocation(xLoc, yLoc);
+                Influencer tempInf = tempInfluencer.GetComponent<Influencer>();
+                tempInf.SetMapLocation(xLoc, yLoc);
 
                 //if it is set to green team
                 if(team)
                 {
                     tempInfluencer.transform.parent = GreenTeamParent.transform;
-                    InfluenceMap.Instance.AddGreenUnit(tempInfluencer);
+                    InfluenceMap.Instance.AddGreenUnit(tempInf);
                 }
                 //else it is set to red team
                 else
                 {
                     tempInfluencer.transform.parent = RedTeamParent.transform;
-                    InfluenceMap.Instance.AddRedUnit(tempInfluencer);
+                    InfluenceMap.Instance.AddRedUnit(tempInf);
                 }
             }
             

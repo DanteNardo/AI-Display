@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class InfluenceMap : MonoBehaviour
 {
@@ -11,17 +10,10 @@ public class InfluenceMap : MonoBehaviour
     private const int GREEN = -1;
     private const float NO_INFLUENCE = 0.0f;
     private const float FULL_INFLUENCE = 1.0f;
-    private const char EMPTY = ' ';
-    private const int NO_DIRECTION = 0;
-    private const int NORTH = -1;
-    private const int SOUTH = 1;
-    private const int WEST = -1;
-    private const int EAST = 1;
 
     // The relevant influence data
     public int size;
     public float[,] map;
-    public char[,] placements;
 
     // Correctly handles singleton behavior
     private void Awake()
@@ -36,23 +28,23 @@ public class InfluenceMap : MonoBehaviour
         }
     }
 
+    // Initializes variables
     private void Start()
     {
         GenerateArrays();
     }
 
+    // Initializes arrays
     private void GenerateArrays()
     {
         map = new float[size, size];
-        placements = new char[size, size];
 
-        // Fill both arrays with blank slots
+        // Fill the array with blank slots
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
             {
                 map[i, j] = NO_INFLUENCE;
-                placements[i, j] = EMPTY;
             }
         }
     }
@@ -69,37 +61,6 @@ public class InfluenceMap : MonoBehaviour
                 int distance = Distance(x, z, startX, startZ);
                 float influence = ModInfluence(x, z, distance, color, strength);
             }
-        }
-    }
-
-    // Creates influence in a specific direction for a unit
-    private void CreateInfluence(int startX, int startZ, int xMod, int zMod, int color)
-    {
-        // Variables for influence generation
-        int x = startX;
-        int z = startZ;
-        int xPre = x;
-        int zPre = z;
-
-        // Iterate until we have either 0 influence or run out of space on the map
-        while (true)
-        {
-            x += xMod;
-            z += zMod;
-
-            if (SquareExists(x, z))
-            {
-                // Generate the influence value from distance to influencer
-                int distance = Distance(x, z, xPre, zPre);
-                float influence = ModInfluence(x, z, distance, color);
-
-                // Break out of the loop
-                if (influence == 0)
-                {
-                    return;
-                }
-            }
-            else return;
         }
     }
 
@@ -128,27 +89,27 @@ public class InfluenceMap : MonoBehaviour
         return Mathf.Abs(x2 - x1) + Mathf.Abs(z2 - z1);
     }
 
-    public void AddRedUnit(GameObject unit)
+    // Adds a red unit and adjusts influence based on their strength and team
+    public void AddRedUnit(Influencer influencer)
     {
         // Place the red unit
-        int x = (int)Mathf.Floor(unit.transform.position.x);
-        int z = (int)Mathf.Floor(unit.transform.position.z);
-        Instance.placements[x, z] = 'r';
-        Instance.map[x, z] = FULL_INFLUENCE * RED;
+        int x = influencer.xLoc;
+        int z = influencer.yLoc; // Discrepancy between programmers. Z = Y in this case.
+        map[x, z] += FULL_INFLUENCE * RED;
 
         // Modify influence map
-        Instance.CreateInfluence(x, z, RED);
+        CreateInfluence(x, z, RED, influencer.influenceVal);
     }
 
-    public void AddGreenUnit(GameObject unit)
+    // Adds a green unit and adjusts influence based on their strength and team
+    public void AddGreenUnit(Influencer influencer)
     {
         // Place the red unit
-        int x = (int)Mathf.Floor(unit.transform.position.x);
-        int z = (int)Mathf.Floor(unit.transform.position.z);
-        Instance.placements[x, z] = 'g';
-        Instance.map[x, z] = FULL_INFLUENCE * GREEN;
+        int x = influencer.xLoc;
+        int z = influencer.yLoc; // Discrepancy between programmers. Z = Y in this case.
+        map[x, z] += FULL_INFLUENCE * GREEN;
 
         // Modify influence map
-        Instance.CreateInfluence(x, z, GREEN);
+        CreateInfluence(x, z, GREEN, influencer.influenceVal);
     }
 }
